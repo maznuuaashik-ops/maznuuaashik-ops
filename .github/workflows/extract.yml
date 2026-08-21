@@ -1,0 +1,61 @@
+name: Extract YORNAM
+
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  extract:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: Find and extract ZIP
+        run: |
+          set -e
+
+          ZIP_FILE=$(find . -maxdepth 1 -type f -iname "*.zip" | head -n 1)
+
+          if [ -z "$ZIP_FILE" ]; then
+            echo "No ZIP file found."
+            exit 1
+          fi
+
+          rm -rf /tmp/yornam
+          mkdir -p /tmp/yornam
+
+          unzip -q "$ZIP_FILE" -d /tmp/yornam
+
+          PACKAGE=$(find /tmp/yornam -name package.json -not -path "*/node_modules/*" | head -n 1)
+
+          if [ -z "$PACKAGE" ]; then
+            echo "package.json not found inside ZIP."
+            exit 1
+          fi
+
+          PROJECT_DIR=$(dirname "$PACKAGE")
+
+          rsync -a "$PROJECT_DIR/" ./ \
+            --exclude ".env" \
+            --exclude ".env.*" \
+            --exclude "node_modules/" \
+            --exclude "dist/" \
+            --exclude ".git/"
+
+      - name: Remove ZIP
+        run: |
+          find . -maxdepth 1 -type f -iname "*.zip" -delete
+
+      - name: Commit YORNAM files
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+
+          git add .
+          git diff --cached --quiet || git commit -m "Extract YORNAM project"
+
+          git push

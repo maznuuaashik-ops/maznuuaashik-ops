@@ -1,0 +1,8 @@
+{
+  "name": "YORNAM",
+  "description": "AI-Powered Instagram Reel Analyzer and Virality Predictor",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
